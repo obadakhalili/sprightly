@@ -1,0 +1,23 @@
+{
+  "name": "sprightly",
+  "version": "1.0.1",
+  "description": "JavaScript lightweight template engine",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "embedded js",
+    "js",
+    "template engine",
+    "express"
+  ],
+  "author": "Obada Khalili",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  }
+}
