@@ -2,6 +2,10 @@
 
 Template engines like EJS and Handlebars are good. But sometimes you don't want all the code and the complexity that comes with them. You only want a simple variables injection and a partials system. Well, this is what Sprightly is for, its a one-filer that consists of only 45 lines of code, that lets you use those tiny features without having to include or think about anything else.
 
+## Install
+```
+npm i sprightly
+```
 ## Integration With ExpressJS
 Since Sprightly is not yet a member of the ExpressJS template engines family. You have to add an extra line of code
 ```javascript
