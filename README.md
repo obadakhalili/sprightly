@@ -31,13 +31,13 @@ app.get('/', (_, res) => {
 <!DOCTYPE  html>
 <html  lang="en">
 <head>
-	<meta  charset="UTF-8">
-	<meta  name="viewport"  content="width=device-width, initial scale=1.0">
-	<title>Sprightly is cool like a spy</title>
+  <meta  charset="UTF-8">
+  <meta  name="viewport"  content="width=device-width, initial scale=1.0">
+  <title>Sprightly is cool like a spy</title>
 </head>
 <body>
-	<h1>{{ foo }}</h1>
-	<!-- The above becomes <h1>bar</h1> -->
+  <h1>{{ foo }}</h1>
+  <!-- The above becomes <h1>bar</h1> -->
 </body>
 </html>
 ```
@@ -48,13 +48,13 @@ To inject a partial, just use the following syntax `<< [./path] >>`. The path fr
 <!DOCTYPE  html>
 <html  lang="en">
 <head>
-	<meta  charset="UTF-8">
-	<meta  name="viewport"  content="width=device-width, initial-scale=1.0">
-	<title>Sprightly is cool like a spy</title>
+  <meta  charset="UTF-8">
+  <meta  name="viewport"  content="width=device-width, initial-scale=1.0">
+  <title>Sprightly is cool like a spy</title>
 </head>
 <body>
-	<< partials/cool >>
-	<!-- the above becomes whatever is inside the cool.spy partial -->
+  << partials/cool >>
+  <!-- the above becomes whatever is inside the cool.spy partial -->
 </body>
 </html>
 ```
