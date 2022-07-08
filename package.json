@@ -1,23 +1,11 @@
 {
-  "name": "sprightly",
-  "version": "1.0.1",
-  "description": "JavaScript lightweight template engine",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "dev": "nodemon index.js"
+    "format": "prettier --ignore-path .gitignore --write .",
+    "sort-pkgjson": "sort-package-json \"package.json\" \"packages/*/package.json\""
   },
-  "keywords": [
-    "embedded js",
-    "js",
-    "template engine",
-    "express"
-  ],
-  "author": "Obada Khalili",
-  "license": "MIT",
   "devDependencies": {
-    "nodemon": "^2.0.4"
-  },
-  "engines": {
-    "node": ">=10.0.0"
+    "prettier": "2.7.1",
+    "sort-package-json": "^1.57.0"
   }
 }
