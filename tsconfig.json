@@ -6,7 +6,6 @@
     "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": [],
     "outDir": "./dist"
   },
   "include": ["src/**/*"]
