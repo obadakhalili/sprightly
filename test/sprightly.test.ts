@@ -6,10 +6,16 @@ jest.mock("fs/promises", () => {
     "../his-name": `his name is {{ hisName }}`,
     nested: "my name is {{ name.first }} {{ name.last }}",
     "array-indexing": "my name is {{ name[0] }} {{ name[1] }}",
+    "not-found-referenced-component": "{{> ../not-found }}",
   }
 
   return {
-    readFile: (filePath: string) => dir[filePath],
+    readFile: (filePath: string) => {
+      if (filePath in dir) {
+        return Promise.resolve(dir[filePath])
+      }
+      return Promise.reject(new Error("file not found"))
+    },
   }
 })
 
@@ -34,11 +40,7 @@ test("if key doesn't exist and the `keyFallback` is set, then the resolved value
 
 test("if key doesn't exist and the `throwOnKeyNotfound` is set to true, then an error should be thrown", async () => {
   await expect(
-    sprightly(
-      "key-not-found",
-      { hisName: "Osid" },
-      { throwOnKeyNotfound: true },
-    ),
+    sprightly("my-name", { hisName: "Osid" }, { throwOnKeyNotfound: true }),
   ).rejects.toMatchInlineSnapshot(`[Error: sprightly error]`)
 })
 
@@ -54,4 +56,16 @@ test("array indexing is resolved correctly", async () => {
     name: ["Obada", "Khalili"],
   })
   expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+})
+
+test("throws if entry point not found", async () => {
+  await expect(sprightly("not-found", {})).rejects.toMatchInlineSnapshot(
+    `[Error: file not found]`,
+  )
+})
+
+test("throws if component not found", async () => {
+  await expect(
+    sprightly("not-found-referenced-component", {}),
+  ).rejects.toMatchInlineSnapshot()
 })
