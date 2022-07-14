@@ -6,6 +6,7 @@ jest.mock("fs/promises", () => {
     "../his-name": `his name is {{ hisName }}`,
     nested: "my name is {{ name.first }} {{ name.last }}",
     "array-indexing": "my name is {{ name[0] }} {{ name[1] }}",
+    "nested-indexing": "{{ property.nested[0].anotherProperty[1] }}",
     "not-found-referenced-component": "{{> ../not-found }}",
   }
 
@@ -68,4 +69,13 @@ test("throws if component not found", async () => {
   await expect(
     sprightly("not-found-referenced-component", {}),
   ).rejects.toMatchInlineSnapshot()
+})
+
+test("deep nested properties and array indexing are resolved correctly", async () => {
+  const doc = await sprightly("nested-indexing", {
+    property: {
+      nested: [{ anotherProperty: ["Obada", "Khalili"] }],
+    },
+  })
+  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
 })
