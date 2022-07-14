@@ -4,6 +4,8 @@ jest.mock("fs/promises", () => {
   const dir: Record<string, string> = {
     "my-name": `my name is {{ myName }}. << ../his-name >>`,
     "../his-name": `his name is {{ hisName }}`,
+    nested: "my name is {{ name.first }} {{ name.last }}",
+    "array-indexing": "my name is {{ name[0] }} {{ name[1] }}",
   }
 
   return {
@@ -38,4 +40,18 @@ test("if key doesn't exist and the `throwOnKeyNotfound` is set to true, then an 
       { throwOnKeyNotfound: true },
     ),
   ).rejects.toMatchSnapshot()
+})
+
+test("nested properties are resolved correctly", async () => {
+  const doc = await sprightly("nested", {
+    name: { first: "Obada", last: "Khalili" },
+  })
+  expect(doc).toMatchSnapshot()
+})
+
+test("array indexing is resolved correctly", async () => {
+  const doc = await sprightly("array-indexing", {
+    name: ["Obada", "Khalili"],
+  })
+  expect(doc).toMatchSnapshot()
 })

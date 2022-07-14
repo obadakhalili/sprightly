@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`array indexing is resolved correctly 1`] = `"sprightly"`;
+
 exports[`good first test: "sprightly" 1`] = `"sprightly"`;
 
 exports[`if key doesn't exist and the \`keyFallback\` is set, then the resolved value should be the value set to \`keyFallback\`: "sprightly" 1`] = `"sprightly"`;
@@ -7,3 +9,5 @@ exports[`if key doesn't exist and the \`keyFallback\` is set, then the resolved 
 exports[`if key doesn't exist and the \`throwOnKeyNotfound\` is set to true, then an error should be thrown 1`] = `[Error: sprightly error]`;
 
 exports[`if key doesn't exist, then the resolved value should be \`keyFallback\`'s default value whcih is empty string: "sprightly" 1`] = `"sprightly"`;
+
+exports[`nested properties are resolved correctly 1`] = `"sprightly"`;
