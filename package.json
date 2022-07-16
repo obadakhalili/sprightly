@@ -12,7 +12,7 @@
     "Osid Abu-Alrub <o.abualrub20@gmail.com> (https://github.com/OsidAbu-alrub)"
   ],
   "main": "dist/sprightly.js",
-  "types": "dist/sprightly.js",
+  "types": "dist/sprightly.d.ts",
   "files": [
     "dist"
   ],
@@ -29,6 +29,7 @@
     "*.{js,ts,md,yml,yaml,json}": "prettier --write"
   },
   "devDependencies": {
+    "@types/node": "^18.0.5",
     "husky": "^8.0.1",
     "lint-staged": "^13.0.3",
     "nodemon": "^2.0.19",
