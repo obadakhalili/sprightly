@@ -1,60 +1,85 @@
-import { readFile } from "fs/promises"
+import { readFileSync } from "fs"
+import path from "path"
+import KeyNotFoundError from "./errors/KeyNotFoundError"
+import PathNotFoundError from "./errors/PathNotFoundError"
 
 interface Data {
   [key: string]: string | number | Array<string | number | Data> | Data
 }
 
-type Options = {
-  cache?: boolean
+interface Options {
   keyFallback?: string
   throwOnKeyNotfound?: boolean
+  cache?: boolean
 }
 
-const defaultOptions: Options = {
+const cache = new Map<string, string>()
+
+const defaultOptions = {
   keyFallback: "",
   throwOnKeyNotfound: false,
   cache: false,
 }
 
-export = async function sprightly(
+function parse(file: string, data: Data, options: Options) {
+  const parsedFile = file.replaceAll(
+    /\{\{(>?)(.*?)\}\}/g,
+    (_, isComponent: string, reference: string) => {
+      if (isComponent) {
+        try {
+          return sprightly(reference, data, options)
+        } catch (e) {
+          throw new PathNotFoundError(reference.trim())
+        }
+      }
+      return reference
+        .split(/((?:\w+))(?:(?:\[)(\d+)(?:\]))?(?:\.?)/gm)
+        .filter((v) => v && Boolean(v.trim()))
+        .reduce((obj, key) => {
+          if (
+            typeof obj === "object" &&
+            !(key in obj) &&
+            options.throwOnKeyNotfound
+          )
+            throw new KeyNotFoundError(key.trim())
+          return (obj[key] || options.keyFallback) as Data
+        }, data) as unknown as string
+    },
+  )
+  return parsedFile
+}
+
+function sprightly(
   entryPoint: string,
   data: Data,
   options: Options = defaultOptions,
-): Promise<string> {
-  const regex = /<<(.*?)>>|\{\{(.*?)\}\}/gi
-  const file = (await readFile(entryPoint)).toString()
-  const result = file.replaceAll(regex, (match) => {
-    const value = match.substring(3, match.length - 2).trim()
-    if (isProperty(match[0]))
-      return isNestedObject(value)
-        ? getNestedValue(value, options.keyFallback, data)
-        : getValue(value, options.keyFallback, data)
-    else if (isComponent(match[0])) return sprightly(value, data, options)
-    return ""
+): string {
+  options = {
+    ...defaultOptions,
+    ...options,
+  }
+  const entryPointAbsolutePath = path.resolve(path.normalize(entryPoint.trim()))
+  if (options.cache && cache.has(entryPointAbsolutePath))
+    return cache.get(entryPointAbsolutePath) as string
+  try {
+    const file = readFileSync(entryPointAbsolutePath).toString()
+    const parsedFile = parse(file, data, options)
+    if (options.cache && !cache.has(entryPointAbsolutePath))
+      cache.set(entryPointAbsolutePath, parsedFile)
+    return parsedFile
+  } catch (error) {
+    if (error instanceof KeyNotFoundError)
+      throw `Key "${error.key}" not found in "data" at ${entryPointAbsolutePath}`
+    if (error instanceof PathNotFoundError)
+      throw `Component ${error.component} was not found in ${entryPointAbsolutePath}`
+    throw error
+  }
+}
+export = (entryPoint: string, data: Data, options: Options = defaultOptions) =>
+  new Promise<string>((resolve, reject) => {
+    try {
+      resolve(sprightly(entryPoint, data, options))
+    } catch (error) {
+      reject(error as string)
+    }
   })
-  return result
-}
-
-const isProperty = (char: string): boolean => char === "{" || char === "}"
-
-const isComponent = (char: string): boolean => char === "<"
-
-const isNestedObject = (obj: string): boolean =>
-  obj.includes(".") || obj.includes("[")
-
-const getNestedValue = (keys: string, keyFallback = "", data: Data) => {
-  const parsedKeys = keys
-    .replaceAll(/\["?(.*?)"?\]|\./gi, (match) => {
-      if (match[0] === ".") return " "
-      return ` ${match.substring(1, match.length - 1)}`
-    })
-    .split(" ")
-  return parsedKeys.reduce<any>((acc, key) => {
-    if (typeof acc === "object") return getValue(key, keyFallback, acc)
-    // this happens when number of keys exceeds the number of properties
-    return keyFallback
-  }, data)
-}
-
-const getValue = (key: string, keyFallback = "", data: Data) =>
-  key in data ? data[key] : keyFallback
