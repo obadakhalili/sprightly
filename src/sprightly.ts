@@ -1,30 +1,8 @@
-import { readFileSync } from "fs"
+import { readFileSync, existsSync } from "fs"
 import path from "path"
 
 interface Data {
   [key: string]: string | number | Array<string | number | Data> | Data
-}
-
-class KeyNotFoundError extends Error {
-  readonly key: string
-  readonly src: string
-  constructor(key: string, src: string) {
-    const message = `Key "${key}" not found in "data" at ${src}`
-    super(message)
-    this.key = key
-    this.src = src
-  }
-}
-
-class PathNotFoundError extends Error {
-  readonly component: string
-  readonly src: string
-  constructor(component: string, src: string) {
-    const message = `Component "${component}" was not found in ${src}`
-    super(message)
-    this.component = component
-    this.src = src
-  }
 }
 
 interface Options {
@@ -33,20 +11,33 @@ interface Options {
   cache?: boolean
 }
 
-function parse(file: string, data: Data, options: Options) {
+function parse(file: string, entryPoint: string, data: Data, options: Options) {
   const parsedFile = file.replaceAll(
     /\{\{(>?)(.*?)\}\}/g,
     (_, isComponent: string, reference: string) => {
       reference = reference.trim()
       if (isComponent) {
-        try {
-          return sprightly(reference, data, options)
-        } catch (e) {
-          throw new PathNotFoundError(reference, "")
+        // if last segement of path is a file
+        // we go back one step to get the directory of the file
+        if (path.extname(entryPoint)) {
+          entryPoint = path.normalize(path.join(entryPoint, ".."))
         }
+
+        const componentAbsolutePath = path.resolve(
+          entryPoint,
+          path.normalize(reference),
+        )
+
+        if (!existsSync(componentAbsolutePath)) {
+          throw new Error(
+            `Component "${reference}" was not found at ${entryPoint}`,
+          )
+        }
+
+        return sprightly(componentAbsolutePath, data, options)
       }
 
-      return reference
+      const parsedData = reference
         .split(/((?:\w+))(?:(?:\[)(\d+)(?:\]))?(?:\.?)/gm)
         .filter((v) => v?.trim())
         .reduce((obj, key) => {
@@ -56,11 +47,17 @@ function parse(file: string, data: Data, options: Options) {
             options.throwOnKeyNotfound &&
             !(key in obj)
           ) {
-            throw new KeyNotFoundError(key, "")
+            throw new Error(`Key "${key}" was not found at ${entryPoint}`)
           }
 
           return (obj[key] || options.keyFallback) as Data
-        }, data) as unknown as string
+        }, data)
+
+      if (parsedData && typeof parsedData !== "string") {
+        throw new Error(`"${reference}" must yield out a primitve value`)
+      }
+
+      return parsedData
     },
   )
   return parsedFile
@@ -84,32 +81,33 @@ function sprightly(
     ...options,
   }
 
-  console.log(path.resolve(entryPoint))
-  const entryPointAbsolutePath = path.resolve(path.normalize(entryPoint))
-  if (options.cache && cache.has(entryPointAbsolutePath)) {
-    return cache.get(entryPointAbsolutePath)!
-  }
-
   try {
-    const file = readFileSync(entryPointAbsolutePath).toString()
-    const parsedFile = parse(file, data, options)
+    if (!path.isAbsolute(entryPoint)) {
+      entryPoint = path.resolve(path.normalize(entryPoint))
+    }
 
-    if (options.cache && !cache.has(entryPointAbsolutePath)) {
-      cache.set(entryPointAbsolutePath, parsedFile)
+    if (!existsSync(entryPoint)) {
+      throw new Error(`${entryPoint} was not found`)
+    }
+
+    if (options.cache && cache.has(entryPoint)) {
+      return cache.get(entryPoint)!
+    }
+
+    const file = readFileSync(entryPoint).toString()
+    const parsedFile = parse(file, entryPoint, data, options)
+
+    if (options.cache && !cache.has(entryPoint)) {
+      cache.set(entryPoint, parsedFile)
     }
 
     return parsedFile
   } catch (error) {
-    if (error instanceof KeyNotFoundError) {
-      throw new KeyNotFoundError(error.key, entryPoint)
-    }
-    if (error instanceof PathNotFoundError) {
-      throw new PathNotFoundError(error.component, entryPoint)
-    }
     throw error
   }
 }
-export = function sprightlyAsync(
+
+function sprightlyAsync(
   entryPoint: string,
   data: Data,
   options: Options = defaultOptions,
@@ -118,7 +116,9 @@ export = function sprightlyAsync(
     try {
       resolve(sprightly(entryPoint, data, options))
     } catch (error) {
-      reject(error as string)
+      reject((error as Error).message)
     }
   })
 }
+
+export = { sprightly, sprightlyAsync }
