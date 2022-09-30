@@ -11,33 +11,41 @@ interface Options {
   cache?: boolean
 }
 
-function parse(file: string, entryPoint: string, data: Data, options: Options) {
-  const parsedFile = file.replaceAll(
+class SprightlyError extends Error {
+  constructor(message: string) {
+    super(message)
+  }
+}
+
+function parse(
+  fileContent: string,
+  filePath: string,
+  data: Data,
+  options: Options,
+) {
+  const parsedFile = fileContent.replaceAll(
     /\{\{(>?)(.*?)\}\}/g,
     (_, isComponent: string, reference: string) => {
       reference = reference.trim()
       if (isComponent) {
-        // if last segement of path is a file
         // we go back one step to get the directory of the file
-        if (path.extname(entryPoint)) {
-          entryPoint = path.normalize(path.join(entryPoint, ".."))
-        }
+        const fileDirectory = path.normalize(path.join(filePath, ".."))
 
         const componentAbsolutePath = path.resolve(
-          entryPoint,
+          fileDirectory,
           path.normalize(reference),
         )
 
         if (!existsSync(componentAbsolutePath)) {
-          throw new Error(
-            `Component "${reference}" was not found at ${entryPoint}`,
+          throw new SprightlyError(
+            `Component "${reference}" was not found at ${filePath}`,
           )
         }
 
         return sprightly(componentAbsolutePath, data, options)
       }
 
-      const parsedData = reference
+      const keyValue = reference
         .split(/((?:\w+))(?:(?:\[)(\d+)(?:\]))?(?:\.?)/gm)
         .filter((v) => v?.trim())
         .reduce((obj, key) => {
@@ -47,17 +55,21 @@ function parse(file: string, entryPoint: string, data: Data, options: Options) {
             options.throwOnKeyNotfound &&
             !(key in obj)
           ) {
-            throw new Error(`Key "${key}" was not found at ${entryPoint}`)
+            throw new SprightlyError(
+              `Key "${key}" was not found at ${filePath}`,
+            )
           }
 
           return (obj[key] || options.keyFallback) as Data
         }, data)
 
-      if (parsedData && typeof parsedData !== "string") {
-        throw new Error(`"${reference}" must yield out a primitve value`)
+      if (typeof keyValue === "object") {
+        throw new SprightlyError(
+          `"${reference}" must yield out a primitve value`,
+        )
       }
 
-      return parsedData
+      return keyValue
     },
   )
   return parsedFile
@@ -81,30 +93,26 @@ function sprightly(
     ...options,
   }
 
-  try {
-    if (!path.isAbsolute(entryPoint)) {
-      entryPoint = path.resolve(path.normalize(entryPoint))
-    }
-
-    if (!existsSync(entryPoint)) {
-      throw new Error(`${entryPoint} was not found`)
-    }
-
-    if (options.cache && cache.has(entryPoint)) {
-      return cache.get(entryPoint)!
-    }
-
-    const file = readFileSync(entryPoint).toString()
-    const parsedFile = parse(file, entryPoint, data, options)
-
-    if (options.cache && !cache.has(entryPoint)) {
-      cache.set(entryPoint, parsedFile)
-    }
-
-    return parsedFile
-  } catch (error) {
-    throw error
+  if (!path.isAbsolute(entryPoint)) {
+    entryPoint = path.resolve(path.normalize(entryPoint))
   }
+
+  if (!existsSync(entryPoint)) {
+    throw new SprightlyError(`Entry point ${entryPoint} does not exist`)
+  }
+
+  if (options.cache && cache.has(entryPoint)) {
+    return cache.get(entryPoint)!
+  }
+
+  const file = readFileSync(entryPoint).toString()
+  const parsedFile = parse(file, entryPoint, data, options)
+
+  if (options.cache && !cache.has(entryPoint)) {
+    cache.set(entryPoint, parsedFile)
+  }
+
+  return parsedFile
 }
 
 function sprightlyAsync(
@@ -116,7 +124,7 @@ function sprightlyAsync(
     try {
       resolve(sprightly(entryPoint, data, options))
     } catch (error) {
-      reject((error as Error).message)
+      reject((error as SprightlyError).message)
     }
   })
 }
