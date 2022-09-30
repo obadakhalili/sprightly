@@ -28,11 +28,8 @@ function parse(
     (_, isComponent: string, reference: string) => {
       reference = reference.trim()
       if (isComponent) {
-        // we go back one step to get the directory of the file
-        const fileDirectory = path.normalize(path.join(filePath, ".."))
-
-        const componentAbsolutePath = path.resolve(
-          fileDirectory,
+        const componentAbsolutePath = path.join(
+          path.dirname(filePath),
           path.normalize(reference),
         )
 
@@ -124,7 +121,7 @@ function sprightlyAsync(
     try {
       resolve(sprightly(entryPoint, data, options))
     } catch (error) {
-      reject((error as SprightlyError).message)
+      reject(error as SprightlyError)
     }
   })
 }
