@@ -12,7 +12,7 @@
     "Osid Abu-Alrub <o.abualrub20@gmail.com> (https://github.com/OsidAbu-alrub)"
   ],
   "main": "dist/sprightly.js",
-  "types": "dist/sprightly.js",
+  "types": "dist/sprightly.d.ts",
   "files": [
     "dist"
   ],
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@types/jest": "^28.1.4",
-    "@types/node": "^18.0.3",
+    "@types/node": "^18.0.5",
     "husky": "^8.0.1",
     "jest": "^28.1.2",
     "lint-staged": "^13.0.3",
