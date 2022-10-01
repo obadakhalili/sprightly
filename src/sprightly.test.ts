@@ -1,6 +1,6 @@
-import sprightly from "../src/sprightly"
+import { sprightlyAsync } from "./sprightly"
 
-jest.mock("fs/promises", () => {
+jest.mock("fs", () => {
   const dir: Record<string, string> = {
     "my-name": `my name is {{ myName }}.\n{{> ../his-name }}`,
     "../his-name": `his name is {{ hisName }}`,
@@ -11,71 +11,101 @@ jest.mock("fs/promises", () => {
   }
 
   return {
-    readFile: (filePath: string) => {
+    readFileSync: (filePath: string) => {
       if (filePath in dir) {
-        return Promise.resolve(dir[filePath])
+        return dir[filePath]
       }
-      return Promise.reject(new Error("file not found"))
+      throw new Error("file not found")
     },
+    existsSync: (filePath: string) => filePath in dir,
+  }
+})
+
+jest.mock("path", () => {
+  return {
+    ...jest.requireActual("path"),
+    isAbsolute: () => true,
+    dirname: () => "",
+    normalize: (filePath: string) => filePath,
   }
 })
 
 test("good first test", async () => {
-  const doc = await sprightly("my-name", { myName: "Obada", hisName: "Osid" })
-  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+  const doc = await sprightlyAsync("my-name", {
+    myName: "Obada",
+    hisName: "Osid",
+  })
+  expect(doc).toMatchInlineSnapshot(`
+    "my name is Obada.
+    his name is Osid"
+  `)
 })
 
 test("if key doesn't exist, then the resolved value should be `keyFallback`'s default value whcih is empty string", async () => {
-  const doc = await sprightly("my-name", { hisName: "Osid" })
-  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+  const doc = await sprightlyAsync("my-name", { hisName: "Osid" })
+  expect(doc).toMatchInlineSnapshot(`
+    "my name is .
+    his name is Osid"
+  `)
 })
 
 test("if key doesn't exist and the `keyFallback` is set, then the resolved value should be the value set to `keyFallback`", async () => {
-  const doc = await sprightly(
+  const doc = await sprightlyAsync(
     "my-name",
     { hisName: "Osid" },
     { keyFallback: "Obada" },
   )
-  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+  expect(doc).toMatchInlineSnapshot(`
+    "my name is Obada.
+    his name is Osid"
+  `)
 })
 
 test("if key doesn't exist and the `throwOnKeyNotfound` is set to true, then an error should be thrown", async () => {
   await expect(
-    sprightly("my-name", { hisName: "Osid" }, { throwOnKeyNotfound: true }),
-  ).rejects.toMatchInlineSnapshot(`[Error: sprightly error]`)
+    sprightlyAsync(
+      "my-name",
+      { hisName: "Osid" },
+      { throwOnKeyNotfound: true },
+    ),
+  ).rejects.toMatchInlineSnapshot(
+    `[Error: Key "myName" was not found at "my-name"]`,
+  )
 })
 
 test("nested properties are resolved correctly", async () => {
-  const doc = await sprightly("nested", {
+  const doc = await sprightlyAsync("nested", {
     name: { first: "Obada", last: "Khalili" },
   })
-  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+  expect(doc).toMatchInlineSnapshot(`"my name is Obada Khalili"`)
 })
 
 test("array indexing is resolved correctly", async () => {
-  const doc = await sprightly("array-indexing", {
+  const doc = await sprightlyAsync("array-indexing", {
     name: ["Obada", "Khalili"],
   })
-  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+  expect(doc).toMatchInlineSnapshot(`"my name is Obada Khalili"`)
 })
 
 test("throws if entry point not found", async () => {
-  await expect(sprightly("not-found", {})).rejects.toMatchInlineSnapshot(
-    `[Error: file not found]`,
+  await expect(sprightlyAsync("not-found", {})).rejects.toMatchInlineSnapshot(
+    `[Error: Entry point "not-found" does not exist]`,
   )
 })
 
 test("throws if component not found", async () => {
   await expect(
-    sprightly("not-found-referenced-component", {}),
-  ).rejects.toMatchInlineSnapshot()
+    sprightlyAsync("not-found-referenced-component", {}),
+  ).rejects.toMatchInlineSnapshot(
+    `[Error: Component "../not-found" was not found at "not-found-referenced-component"]`,
+  )
 })
 
 test("deep nested properties and array indexing are resolved correctly", async () => {
-  const doc = await sprightly("nested-indexing", {
+  const doc = await sprightlyAsync("nested-indexing", {
     property: {
       nested: [{ anotherProperty: ["Obada", "Khalili"] }],
     },
   })
-  expect(doc).toMatchInlineSnapshot(`"sprightly"`)
+  expect(doc).toMatchInlineSnapshot(`"Khalili"`)
 })

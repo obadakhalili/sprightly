@@ -7,7 +7,7 @@
     "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["node"],
+    "types": ["node", "@types/jest"],
     "outDir": "./dist"
   },
   "include": ["src/**/*"]

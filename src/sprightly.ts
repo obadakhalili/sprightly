@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "fs"
+import fs from "fs"
 import path from "path"
 
 interface Data {
@@ -33,9 +33,9 @@ function parse(
           path.normalize(reference),
         )
 
-        if (!existsSync(componentAbsolutePath)) {
+        if (!fs.existsSync(componentAbsolutePath)) {
           throw new SprightlyError(
-            `Component "${reference}" was not found at ${filePath}`,
+            `Component "${reference}" was not found at "${filePath}"`,
           )
         }
 
@@ -53,7 +53,7 @@ function parse(
             !(key in obj)
           ) {
             throw new SprightlyError(
-              `Key "${key}" was not found at ${filePath}`,
+              `Key "${key}" was not found at "${filePath}"`,
             )
           }
 
@@ -94,15 +94,15 @@ function sprightly(
     entryPoint = path.resolve(path.normalize(entryPoint))
   }
 
-  if (!existsSync(entryPoint)) {
-    throw new SprightlyError(`Entry point ${entryPoint} does not exist`)
+  if (!fs.existsSync(entryPoint)) {
+    throw new SprightlyError(`Entry point "${entryPoint}" does not exist`)
   }
 
   if (options.cache && cache.has(entryPoint)) {
     return cache.get(entryPoint)!
   }
 
-  const file = readFileSync(entryPoint).toString()
+  const file = fs.readFileSync(entryPoint).toString()
   const parsedFile = parse(file, entryPoint, data, options)
 
   if (options.cache && !cache.has(entryPoint)) {
@@ -126,4 +126,4 @@ function sprightlyAsync(
   })
 }
 
-export = { sprightly, sprightlyAsync }
+export { sprightly, sprightlyAsync }
