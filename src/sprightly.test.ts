@@ -1,3 +1,4 @@
+import fs from "fs"
 import { sprightlyAsync } from "./sprightly"
 
 jest.mock("fs", () => {
@@ -11,12 +12,12 @@ jest.mock("fs", () => {
   }
 
   return {
-    readFileSync: (filePath: string) => {
+    readFileSync: jest.fn((filePath: string) => {
       if (filePath in dir) {
         return dir[filePath]
       }
       throw new Error("file not found")
-    },
+    }),
     existsSync: (filePath: string) => filePath in dir,
   }
 })
@@ -108,4 +109,28 @@ test("deep nested properties and array indexing are resolved correctly", async (
     },
   })
   expect(doc).toMatchInlineSnapshot(`"Khalili"`)
+})
+
+describe("cache tests", () => {
+  test("expect file to be read twice if cache is disabled", async () => {
+    const readFilesCount = jest.mocked(fs).readFileSync.mock.calls.length
+    const options = { cache: false }
+
+    await sprightlyAsync("../his-name", {}, options)
+    expect(fs.readFileSync).toHaveBeenCalledTimes(readFilesCount + 1)
+
+    await sprightlyAsync("../his-name", {}, options)
+    expect(fs.readFileSync).toHaveBeenCalledTimes(readFilesCount + 2)
+  })
+
+  test("expect file to not be read twice if cache is enabled", async () => {
+    const readFilesCount = jest.mocked(fs).readFileSync.mock.calls.length
+    const options = { cache: true }
+
+    await sprightlyAsync("../his-name", {}, options)
+    expect(fs.readFileSync).toHaveBeenCalledTimes(readFilesCount + 1)
+
+    await sprightlyAsync("../his-name", {}, options)
+    expect(fs.readFileSync).toHaveBeenCalledTimes(readFilesCount + 1)
+  })
 })
