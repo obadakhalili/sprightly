@@ -6,8 +6,8 @@ jest.mock("fs", () => {
     "my-name": `my name is {{ myName }}.\n{{> ../his-name }}`,
     "../his-name": `his name is {{ hisName }}`,
     nested: "my name is {{ name.first }} {{ name.last }}",
-    "array-indexing": "my name is {{ name[0] }} {{ name[1] }}",
-    "nested-indexing": "{{ property.nested[0].anotherProperty[1] }}",
+    "array-indexing": "my name is {{ name.0 }} {{ name.1 }}",
+    "nested-indexing": "{{ property.nested.0.anotherProperty.1 }}",
     "not-found-referenced-component": "{{> ../not-found }}",
   }
 
@@ -40,6 +40,22 @@ test("good first test", async () => {
     "my name is Obada.
     his name is Osid"
   `)
+})
+
+test("if wrong arguments types are passed, then an error should be thrown", async () => {
+  await expect(
+    sprightlyAsync([] as any, {}),
+  ).rejects.toThrowErrorMatchingInlineSnapshot("Entry point must be a string")
+
+  await expect(
+    sprightlyAsync("my-name", new Map() as any),
+  ).rejects.toThrowErrorMatchingInlineSnapshot("Data must be an object")
+
+  await expect(
+    sprightlyAsync("my-name", {}, 123 as any),
+  ).rejects.toThrowErrorMatchingInlineSnapshot(
+    "Options must be an object or undefined",
+  )
 })
 
 test("if key doesn't exist, then the resolved value should be `keyFallback`'s default value whcih is empty string", async () => {

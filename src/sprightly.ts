@@ -1,6 +1,14 @@
 import fs from "fs"
 import path from "path"
 
+import get from "get-value"
+
+class SprightlyError extends Error {
+  constructor(message: string) {
+    super(message)
+  }
+}
+
 interface Data {
   [key: string]: string | number | Array<string | number | Data> | Data
 }
@@ -9,12 +17,6 @@ interface Options {
   keyFallback?: string
   throwOnKeyNotfound?: boolean
   cache?: boolean
-}
-
-class SprightlyError extends Error {
-  constructor(message: string) {
-    super(message)
-  }
 }
 
 function parse(
@@ -27,6 +29,7 @@ function parse(
     /\{\{(>?)(.*?)\}\}/g,
     (_, isComponent: string, reference: string) => {
       reference = reference.trim()
+
       if (isComponent) {
         const componentAbsolutePath = path.join(
           path.dirname(filePath),
@@ -42,31 +45,19 @@ function parse(
         return sprightly(componentAbsolutePath, data, options)
       }
 
-      const keyValue = reference
-        .split(/((?:\w+))(?:(?:\[)(\d+)(?:\]))?(?:\.?)/gm)
-        .filter((v) => v?.trim())
-        .reduce((obj, key) => {
-          key = key.trim()
-          if (
-            typeof obj === "object" &&
-            options.throwOnKeyNotfound &&
-            !(key in obj)
-          ) {
-            throw new SprightlyError(
-              `Key "${key}" was not found at "${filePath}"`,
-            )
-          }
+      const value = get(
+        data,
+        reference,
+        options.throwOnKeyNotfound ? undefined : options.keyFallback,
+      )
 
-          return (obj[key] || options.keyFallback) as Data
-        }, data)
-
-      if (typeof keyValue === "object") {
+      if (value === undefined && options.throwOnKeyNotfound) {
         throw new SprightlyError(
-          `"${reference}" must yield out a primitve value`,
+          `Key "${reference}" was not found at "${filePath}"`,
         )
       }
 
-      return keyValue
+      return value
     },
   )
   return parsedFile
@@ -121,7 +112,7 @@ function sprightlyAsync(
     try {
       resolve(sprightly(entryPoint, data, options))
     } catch (error) {
-      reject(error as SprightlyError)
+      reject(error)
     }
   })
 }
