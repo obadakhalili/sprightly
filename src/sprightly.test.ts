@@ -8,6 +8,8 @@ jest.mock("fs", () => {
     nested: "my name is {{ name.first }} {{ name.last }}",
     "array-indexing": "my name is {{ name.0 }} {{ name.1 }}",
     "nested-indexing": "{{ property.nested.0.anotherProperty.1 }}",
+    "yielding-non-strings-and-numbers":
+      "{{ object }}, {{ array }}, {{ bool }}, {{ null }}, {{ undefined }}, {{ function }}",
     "not-found-referenced-component": "{{> ../not-found }}",
   }
 
@@ -102,6 +104,20 @@ test("array indexing is resolved correctly", async () => {
     name: ["Obada", "Khalili"],
   })
   expect(doc).toMatchInlineSnapshot(`"my name is Obada Khalili"`)
+})
+
+test("yielded values other than strings and numbers are stringified", async () => {
+  const doc = await sprightlyAsync("yielding-non-strings-and-numbers", {
+    object: { a: 1 },
+    array: [1, 2, {}],
+    bool: true,
+    null: null,
+    undefined: undefined,
+    function: (a: number, b: number) => a + b,
+  } as any)
+  expect(doc).toMatchInlineSnapshot(
+    `"[object Object], 1,2,[object Object], true, null, undefined, (a, b) => a + b"`,
+  )
 })
 
 test("throws if entry point not found", async () => {
