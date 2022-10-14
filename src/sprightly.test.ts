@@ -45,16 +45,16 @@ test("good first test", async () => {
 test("if wrong arguments types are passed, then an error should be thrown", async () => {
   await expect(
     sprightlyAsync([] as any, {}),
-  ).rejects.toThrowErrorMatchingInlineSnapshot("Entry point must be a string")
+  ).rejects.toThrowErrorMatchingInlineSnapshot(`"Entry point must be a string"`)
 
   await expect(
     sprightlyAsync("my-name", new Map() as any),
-  ).rejects.toThrowErrorMatchingInlineSnapshot("Data must be an object")
+  ).rejects.toThrowErrorMatchingInlineSnapshot(`"Data must be an object"`)
 
   await expect(
     sprightlyAsync("my-name", {}, 123 as any),
   ).rejects.toThrowErrorMatchingInlineSnapshot(
-    "Options must be an object or undefined",
+    `"Options must be an object or undefined"`,
   )
 })
 

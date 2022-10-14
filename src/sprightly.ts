@@ -76,6 +76,18 @@ function sprightly(
   data: Data,
   options: Options = defaultOptions,
 ): string {
+  if (typeof entryPoint !== "string") {
+    throw new SprightlyError("Entry point must be a string")
+  }
+
+  if (data.constructor !== Object) {
+    throw new SprightlyError("Data must be an object")
+  }
+
+  if (options.constructor !== Object) {
+    throw new SprightlyError("Options must be an object or undefined")
+  }
+
   options = {
     ...defaultOptions,
     ...options,
