@@ -129,4 +129,17 @@ function sprightlyAsync(
   })
 }
 
+sprightly.__express = (
+  path: string,
+  data: Data,
+  callback: Function,
+  options?: Options,
+) => {
+  try {
+    return callback(null, sprightly(path, data, options))
+  } catch (error) {
+    callback(error)
+  }
+}
+
 export { sprightly, sprightlyAsync }
