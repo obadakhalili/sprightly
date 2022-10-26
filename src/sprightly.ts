@@ -3,17 +3,17 @@ import path from "path"
 
 import get from "get-value"
 
-class SprightlyError extends Error {
+export class SprightlyError extends Error {
   constructor(message: string) {
     super(message)
   }
 }
 
-interface Data {
+export interface Data {
   [key: string]: string | number | Array<string | number | Data> | Data
 }
 
-interface Options {
+export interface Options {
   keyFallback?: string
   throwOnKeyNotfound?: boolean
   cache?: boolean
@@ -127,19 +127,6 @@ function sprightlyAsync(
       reject(error)
     }
   })
-}
-
-sprightly.__express = (
-  path: string,
-  data: Data,
-  callback: Function,
-  options?: Options,
-) => {
-  try {
-    return callback(null, sprightly(path, data, options))
-  } catch (error) {
-    callback(error)
-  }
 }
 
 export { sprightly, sprightlyAsync }
