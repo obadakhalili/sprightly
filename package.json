@@ -11,8 +11,16 @@
     "Obada Khalili <obada.khalili@outlook.com> (http://github.com/obadakhalili)",
     "Osid Abu-Alrub <o.abualrub20@gmail.com> (https://github.com/OsidAbu-alrub)"
   ],
-  "main": "dist/sprightly.js",
-  "types": "dist/sprightly.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/sprightly.d.ts",
+      "default": "./dist/sprightly.js"
+    },
+    "./express": {
+      "types": "./dist/adapters/express.d.ts",
+      "default": "./dist/adapters/express.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -30,6 +38,9 @@
   "lint-staged": {
     "*.{js,ts,md,yml,yaml,json}": "prettier --write"
   },
+  "dependencies": {
+    "get-value": "^3.0.1"
+  },
   "devDependencies": {
     "@types/get-value": "^3.0.3",
     "@types/jest": "^28.1.4",
@@ -45,8 +56,5 @@
   },
   "engines": {
     "node": ">=10.0.0"
-  },
-  "dependencies": {
-    "get-value": "^3.0.1"
   }
 }
