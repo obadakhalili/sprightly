@@ -1,15 +1,21 @@
-import { Data, Options, sprightlyAsync, SprightlyError } from "../sprightly"
+import { Options, Data, sprightlyAsync, SprightlyError } from "../sprightly"
 
-export default function __express(
-  path: string,
-  options: Data & Options,
-  callback: (error: SprightlyError | null, html?: string) => void,
-) {
-  sprightlyAsync(path, options, {
-    cache: options.cache,
-    throwOnKeyNotfound: options.throwOnKeyNotfound,
-    keyFallback: options.keyFallback,
-  })
-    .then((html) => callback(null, html))
-    .catch(callback)
+type ExpressOptions = Data & { cache: boolean }
+
+export function sprightlyExpress(sprightlyOptions: Options = {}) {
+  return async function adapter(
+    entryPoint: string,
+    expressOptions: ExpressOptions,
+    callback: (error: SprightlyError | null, html?: string) => void,
+  ) {
+    try {
+      const html = await sprightlyAsync(entryPoint, expressOptions, {
+        cache: expressOptions.cache,
+        ...sprightlyOptions,
+      })
+      callback(null, html)
+    } catch (error) {
+      callback(error as SprightlyError)
+    }
+  }
 }
