@@ -21,6 +21,15 @@
       "default": "./dist/adapters/express.js"
     }
   },
+  "main": "./dist/sprightly.js",
+  "types": "./dist/sprightly.d.ts",
+  "typesVersions": {
+    "*": {
+      "express": [
+        "./dist/adapters/express.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist"
   ],
