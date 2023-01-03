@@ -38,7 +38,7 @@
     "build:watch": "pnpm build --watch",
     "dev": "nodemon dist/sprightly.js",
     "format": "prettier --write .",
-    "postinstall": "husky install",
+    "prepare": "husky install",
     "prepublishOnly": "pnpm build",
     "sort-pkgjson": "sort-package-json",
     "test": "jest",

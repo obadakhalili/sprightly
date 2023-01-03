@@ -2,6 +2,7 @@ import { Options, Data, sprightlyAsync, SprightlyError } from "../sprightly"
 
 type ExpressOptions = Data & { cache: boolean }
 
+// TODO: add unit tests for this adapter
 export = function sprightlyExpress(sprightlyOptions: Options = {}) {
   return async function adapter(
     entryPoint: string,
