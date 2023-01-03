@@ -3,17 +3,17 @@ import path from "path"
 
 import get from "get-value"
 
-class SprightlyError extends Error {
+export class SprightlyError extends Error {
   constructor(message: string) {
     super(message)
   }
 }
 
-interface Data {
+export interface Data {
   [key: string]: string | number | Array<string | number | Data> | Data
 }
 
-interface Options {
+export interface Options {
   keyFallback?: string
   throwOnKeyNotfound?: boolean
   cache?: boolean
