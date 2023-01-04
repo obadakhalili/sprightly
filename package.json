@@ -1,6 +1,6 @@
 {
   "name": "sprightly",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "JavaScript lightweight template engine",
   "keywords": [
     "template engine"
