@@ -5,6 +5,11 @@
   "keywords": [
     "template engine"
   ],
+  "homepage": "https://github.com/obadakhalili/sprightly.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obadakhalili/sprightly.git"
+  },
   "license": "MIT",
   "author": "Obada Khalili <obada.khalili@outlook.com> (http://github.com/obadakhalili)",
   "contributors": [
